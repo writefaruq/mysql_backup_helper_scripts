@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#############################################################################################
+## This file holds the config info
+## 
+##
+## Author: Faruque Sarker <writefaruq@gmail.com>
+#############################################################################################
+# Email Notification of errors
+MAILTO='{{ backup_report_email }}'
+MAILFROM='noreply@'
+
+# Some switches to used as appropriate or via command line parameters
+DO_MOUNT={{ backup_fs_mount }}
+DB_NAME="mysql"
+DAILY_BACKUP_FILE_PATH=${{ backup_dir }}/${DB_NAME}/daily # change <HOSTNAME> to point real path
+ESTIMATED_BACKUP_SIZE=1234 # To avoid intial size calculation errors
+# post script tasks
+TSM_BACKUP_TIME='23:59:00' # When TSM backup starts must be within same date
+GUARD_TIME_THRESHOLD=3600 # Expect to finish backup 1 hour prior to the TSM backup
+CHECK_SLAVE=0  # Disable by replacing 1 wih 0, appropriate in Master node
+HANDLE_CRASH=0 # Crash handling for a long running  abckup task
+#===== Below config should be kept default unless you make any change in script ==============
+
+IGNORE_NON_FATAL=1 # Even if non-fatal error exists should the script proceed
+if [[ $1 = '-a' ]]; then
+    CHECK_RUN=1
+else
+    CHECK_RUN=0
+fi
+
+# Default stuff
+TIMESTAMP=`date +%Y%m%d%H%M`
+CLEANUP_TIME="now + 1 hour"  # TODO: replace that with absolute time
+
+# Adjust paths, parameters
+STATUS_FILE="/data/db01/mysql01/backups/log/backup_script_status_`hostname -s`.log"
+METRICS_FILE="/data/db01/mysql01/backups/log/backup_metrics_`hostname -s`_`date +%Y-%m-%d`.log"
+LOG_FILE="/data/db01/mysql01/backups/log/prebackup_tasks_out_`hostname -s`_`date +%Y-%m-%d`.log"
+ERROR_FILE="/data/db01/mysql01/backups/log/prebackup_tasks_error_`hostname -s`_`date +%Y-%m-%d`.log"
+
+# mysql stuff
+MYSQL_USER='backup_user'
+MYSQL_PASS=`cat /data/db01/mysql01/backups/config/backup_user.pwd`
+BACKUP_SIZE_INCREMENT=2  # double the last backup
+SLAVE_ACCEPTABLE_LAG=1500 # 15 minutes 
+
+HANDLE_CRASH_SCRIPT='/data/db01/mysql01/backups/bin/handle_backup_crash.sh'
+KILL_BACKUP_PROCESS='/data/db01/mysql01/backups/bin/kill_backup_process.sh'
+#============== End of default config ===========================================================
